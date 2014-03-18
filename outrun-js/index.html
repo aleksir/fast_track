@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf8" />
+        <title>The most popular way through the map of Out Run</title>
+        <style>
+h1 { font-size: 2rem; }
+h2 { font-size: 1.8rem; }
+.top { position: fixed; left: 0; top: 1rem; }
+.top *, .tiny { margin: 0; padding: 4px; }
+.tiny { top: 0; font-size: 0.7rem; background: white; width: 100%; }
+#tree { margin-top: 1.5rem; width: 160.0rem; }
+#tree, #tree .item {font-size: 1rem; font-family: monospace; text-align: center; }
+#tree .item { display: inline-block; width: 1.6rem; }
+#tree .item:hover { color: #aaa; cursor: pointer; }
+#tree .item.selected { font-weight: bold; color: #ff6666; }
+#tree .item.clicked { font-weight: bold; color: red; }
+        </style>
+    </head>
+    <body>
+        <p id="route-text" class="top tiny"></p>
+        <div class="top">
+            <h1 id="seed">#</h1>
+            <h2 id="sum">#</h2>
+        </div>
+        <div id="tree"></div>
+        <script src="https://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/bacon.js/0.7.2/bacon.min.js"></script>
+        <script src="outrun.js"></script>
+    </body>
+</html>
