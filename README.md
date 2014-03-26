@@ -8,6 +8,9 @@ look at it.
 
 The algorithm is quite same in all these solutions.
 
+The working example of Javascript solution in 
+<http://aleksir.github.io/fast_track/outrun-js/>.
+
 ## Author
 
 Aleksi Rautakoski <aleksi.rautakoski@gmail.com>
