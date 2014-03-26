@@ -4,23 +4,32 @@
 --
 module Main where
 
+import System.Environment (getArgs)
+
 type Route a = (a, [a])
 
-route x = (x,[x])
+mkRoute x = (x, [x])
 
-maxRoute (a, as) (b, bs)
-        | a > b     = (a, as)
-        | otherwise = (b, bs)
+maxRoute (a, as) (b, bs) = if a > b then (a, as) else (b, bs)
 
 concatRoute (a, as) (b, bs) = (a + b, as ++ bs)
 
-getRoute :: (Num a, Ord a) => [[a]] -> Route a
-getRoute = head . foldr1 fn . map (map route)
+getRoute :: (Num a, Ord a) => [[Route a]] -> Route a
+getRoute = head . foldr1 reduce
     where
-        fn xs acc = map choose . zip3 xs acc $ tail acc
+        reduce xs acc = map choose . zip3 xs acc $ tail acc
         choose (a, b, c) = a `concatRoute` maxRoute b c
 
+parseTree :: [String] -> [[Route Int]]
+parseTree = map (map (mkRoute . read) . words)
+
 main = do
-    lines' <- lines `fmap` readFile "tree.txt"
-    let ints = map (map read . words) $ tail lines' :: [[Int]]
-    putStrLn . show $ getRoute ints
+    (file:_) <- getArgs
+    (seed:levels) <- lines `fmap` readFile file
+    
+    let tree = parseTree levels
+    let (sum, route) = getRoute tree
+    
+    putStrLn seed
+    putStrLn . (++) "# sum: " . show $ sum
+    putStrLn . (++) "# route: " . unwords $ map show route

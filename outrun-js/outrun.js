@@ -1,7 +1,10 @@
 /**
- * A solution for the fast track from Reaktor.
+ * A solution to the Reaktor Fast Track.
  *
  * http://reaktor.fi/careers/fast_track/
+ *
+ * There is the actual algorithm and then function that constructs
+ * nice and interactive tree into the #tree element.
  *
  * @author Aleksi Rautakoski <aleksi.rautakoski@gmail.com>
  */
@@ -9,8 +12,7 @@
 /*global jQuery, Bacon, _*/
 (function (ctx, _) {
     'use strict';
-    var __ = {},
-        O = {};
+    var __ = {}, O = {};
 
     ctx.O = O;
     ctx.O._ = __;
@@ -41,6 +43,8 @@
         return parseInt(str, 10);
     };
 
+    // this __.zip does not make pairs with undefined values
+    // as underscore's does
     __.zip = function () {
         var args = Array.prototype.slice.call(arguments),
             min = _.min(__.map(_.property('length'), args)),
@@ -92,7 +96,7 @@
                 return Route.concat(x, Route.max(route1, route2));
             }),
 
-            routes = _.foldr(tree, function (routes, nodes) {
+            routes = _.reduceRight(tree, function (routes, nodes) {
                 var pairs = __.zip(nodes, routes, _.tail(routes));
                 return _.map(pairs, chooseRoute);
             });
@@ -103,8 +107,9 @@
 }(window, _));
 
 
-/**
- * Construct a beatiful and interactive tree.
+
+/** 
+ * Constructs a beatiful and interactive tree with Bacon.js.
  */
 (function ($, Bacon, O, _) {
     $(function () {
@@ -120,16 +125,16 @@
                         .map(O.parseTreeFromInts),
 
             elems = tree.map(function (tree) {
-                            return _.map(tree, function (level, li) {
-                                var $level = $('<div class="row" data-row="' + li + '"></div>');
-                                 _.each(level, function (r, i) {
-                                     var el = $('<span>', 
-                                                {data: {row: li, index: i}, text: _.first(r.route), class: 'item'});
-                                     $level.append(el);
-                                 });
-                                return $level;
-                            });
-                        }),
+                return _.map(tree, function (level, li) {
+                    var $level = $('<div class="row" data-row="' + li + '"></div>');
+                     _.each(level, function (r, i) {
+                         var el = $('<span>', 
+                                    {data: {row: li, index: i}, text: _.first(r.route), class: 'item'});
+                         $level.append(el);
+                     });
+                    return $level;
+                });
+            }),
             clickedItem,
             selectedItem,
             selectedOrClickedItem,
@@ -160,35 +165,39 @@
                 .doAction('.stopPropagation')
                 .map(_.compose($, _.property('target')));
 
-        clickedItem.onValue(function ($item) {
-            $tree.find('.clicked').removeClass('clicked');
-            $item.addClass('clicked');
-            $tree.addClass('clicked');
+        clickedItem.onValue(function ($el) {
+            if (!$el.hasClass('clicked')) {
+                $tree.addClass('clicked');
+                $tree.find('.clicked').removeClass('clicked');
+            } else {
+                $tree.removeClass('clicked');
+            }
+            $el.toggleClass('clicked');
         });
 
         $tree.asEventStream("click").onValue(function () {
-            $tree.find('.selected, .clicked').removeClass('selected clicked');
+            console.log('fsafsda');
+            $tree.find('.clicked').removeClass('clicked');
             $tree.removeClass('clicked');
         });
 
         selectedItem = elems.flatMap(function () { return $tree.find('.item').asEventStream("mouseover"); })
                 .map(_.compose($, _.property('target')))
-                .filter(_.compose(function () { return !$tree.hasClass('clicked'); }));
-
+                .filter(function () { return !$tree.hasClass('clicked'); });
 
         selectedOrClickedItem = selectedItem.merge(clickedItem)
                 .map(_.partial(getRowAndIndex))
                 .toProperty([0,0]);
 
         selectedTree = tree.combine(selectedOrClickedItem, function (tree, arr) {
-                    var row = arr[0],
-                        index = arr[1],
-                        levels = tree.slice(row);
+            var row = arr[0],
+                index = arr[1],
+                levels = tree.slice(row);
 
-                    return _.map(levels, function (level, i) {
-                        return level.slice(index, index + i + 1);
-                    });
-                });
+            return _.map(levels, function (level, i) {
+                return level.slice(index, index + i + 1);
+            });
+        });
         
         maxRoute = selectedTree.map(O.findMaxRoute);
 

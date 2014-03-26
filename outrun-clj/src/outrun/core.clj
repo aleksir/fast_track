@@ -1,7 +1,8 @@
-;; This is my first clojure app. :)
-;; Going to fall in love with clojure.
+;; "Hello World!" 
+;; This is my first clojure app ever. :)
+;; Going to fall in love with this language.
 
-(ns ^{:doc "Find route through the map of Outrun."
+(ns ^{:doc "Find route through the map of Out Run."
       :author "Aleksi Rautakoski"} outrun.core
   (:gen-class)
   (:use [clojure.string :only (split split-lines)]
@@ -11,7 +12,7 @@
 (defrecord Route [sum route])
 
 (defn create-route
-  "Makes Route from Long."
+  "Makes Route from a number."
   [number]
   (Route. number [number]))
 
@@ -19,30 +20,25 @@
   [& routes] 
   (reduce 
     (fn [route1 route2]
-      (if (> (:sum route1) (:sum route2)) 
-          route1 
-          route2)) 
+      (if (> (:sum route1) (:sum route2)) route1 route2)) 
     routes))
-
-(defn route-add
-  "Concats two routes."
-  [^Route route1 ^Route route2]
-  (Route. 
-    (+ (:sum route1) (:sum route2))
-    (concat (:route route1) (:route route2))))
 
 (defn route-concat
   "Concats two or more routes into a one."
   [& routes]
-  (reduce route-add routes))
+  (reduce (fn [route1 route2]
+            (Route. 
+              (+ (:sum route1) (:sum route2))
+              (concat (:route route1) (:route route2))))
+          routes))
 
 (defn pairs
   "Makes pairs of next and previous items."
   [list]
   (map vector list (rest list)))
 
-(defn- find-max-route 
-  "Finds the most popular route through the tree."
+(defn find-max-route 
+  "Finds the most popular route from the tree."
   [tree]
   (->> 
     (reverse tree) 
@@ -54,8 +50,8 @@
           (map route-concat row))))
     first))
 
-(defn- parse-tree
-  "Parse tree data from a file. A route value can be modified with a funtion."
+(defn parse-tree
+  "Parse tree data from a file."
   [file]
   (let 
     [content (slurp file)
@@ -65,7 +61,23 @@
                   (map (comp create-route #(Integer/parseInt %)))))
                lines)]))
 
-(defn- route-in-html
+
+
+;; This must be used before find-max-route if you want to generate html
+(defn add-indexes-into-tree
+  "Adds indexes into a tree."
+  [tree]
+  (map-indexed 
+    (fn [level-i level] 
+      (map-indexed 
+        (fn [route-i route]
+          (->> [(concat (:route route) [level-i route-i])]
+            (assoc route :route)))
+        level)) 
+    tree))
+
+;; Generate html
+(defn route-in-html
   "Prints route in pretty html format."
   [seed route tree]
   (let [r (atom (:route route))]
@@ -90,34 +102,12 @@
                       [:span.item.selected x])
                     [:span.item x])))])]])))
 
-(defn- add-indexes-into-tree
-  "Adds indexes into a tree."
-  [tree]
-  (map-indexed 
-    (fn [level-i level] 
-      (map-indexed 
-        (fn [route-i route]
-          (->> [(concat (:route route) [level-i route-i])]
-            (assoc route :route)))
-        level)) 
-    tree))
-
-(defn t1
-  []
-  (let [[seed tree] (parse-tree "../tree.txt")
-        tree (add-indexes-into-tree tree)
-        route (find-max-route tree)]
-    (route-in-html seed route tree)))
-
-(defn t2
-  []
-  (spit "./out.html" (t1)))
-
-(defn- main
+(defn -main
   "Main"
   [file & args]
   (let
     [[seed tree] (parse-tree file)
-     route (find-max-route tree)]
-    (print (route-in-html seed route tree))
-    ))
+     indexed-tree (add-indexes-into-tree tree)
+     route (find-max-route indexed-tree)
+     html (route-in-html seed route indexed-tree)]
+    (print html)))
